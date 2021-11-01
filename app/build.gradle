@@ -1,0 +1,75 @@
+apply plugin: 'com.android.application'
+
+project.ext.set("BuildDate", new Date());
+
+def genVersionName() {
+    def verName = System.getenv('SERVER_PACKAGE_VERSION_NAME')
+    if (verName) {
+        return verName
+    } else {
+        def formattedDate = (project.ext.BuildDate).format('yyyyMMdd')
+        return formattedDate
+    }
+}
+
+def genVersionCode() {
+    def verCode = System.getenv('SERVER_PACKAGE_VERSION_CODE')
+    if (verCode) {
+        return verCode.toInteger()
+    } else {
+        return ((project.ext.BuildDate).getTime() / 1000).toInteger()
+    }
+}
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion "30.0.3"
+
+    defaultConfig {
+        applicationId "com.hanson.heartlinker"
+        minSdkVersion 28
+        targetSdkVersion 30
+        versionCode genVersionCode()
+        versionName genVersionName()
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    signingConfigs {
+        hanson{
+            keyAlias 'hanson'
+            keyPassword 'hanson'
+            storeFile file("hanson.keystore")
+            storePassword 'hanson'
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+    }
+    android.applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "HeartLinker-${variant.name}-${variant.versionName}.apk"
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.hanson
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*jar'])
+    implementation 'androidx.appcompat:appcompat:1.3.1'
+    implementation 'com.google.android.material:material:1.4.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+}
